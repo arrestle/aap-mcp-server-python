@@ -1,0 +1,52 @@
+mcp_version: "1.0"
+priority_files:
+  - path: "proc/loadavg"
+    key: load_average
+    label: "System Load"
+    parser: "loadavg"
+
+  - path: "sos_commands/filesys/df_-h"
+    key: disk_summary
+    label: "Disk Usage"
+    parser: "text_preview"
+
+  - path: "sos_commands/systemd/systemctl_list-units"
+    key: failed_services
+    label: "Failed Services"
+    parser: "failed_services"
+
+  - path: "installed-rpms"
+    key: installed_packages
+    label: "Installed RPMs"
+    parser: "text_preview"
+
+  - path: "etc/receptor/receptor.conf"
+    key: receptor_config_present
+    label: "Receptor Config"
+    parser: "presence"
+
+  - path: "var/log/receptor/receptor.log"
+    key: receptor_log_preview
+    label: "Receptor Log Snippet"
+    parser: text_preview
+
+  - path: "etc/hostname"
+    key: host_id
+    label: "Hostname"
+    parser: single_line
+
+  - path: "etc/receptor/receptor.conf"
+    key: receptor_config
+    label: "Receptor Configuration"
+    parser: receptor_yaml
+
+  # - path: "var/log/messages"
+  #   key: syslog_errors
+  #   label: "System Errors"
+  #   parser: error_lines
+  
+  - path: "var/log/samba/"
+    key: samba_errors
+    label: "Samba Logs"
+    parser: samba_errors
+
