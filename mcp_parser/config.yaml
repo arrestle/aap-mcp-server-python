@@ -29,7 +29,7 @@ priority_files:
     key: receptor_log_preview
     label: "Receptor Log Snippet"
     parser: text_preview
-.
+
   - path: "etc/hostname"
     key: host_id
     label: "Hostname"
@@ -49,4 +49,8 @@ priority_files:
     key: samba_errors
     label: "Samba Logs"
     parser: samba_errors
+
+  - path: sos_reports/sos.json
+    key: manifest_files
+    parser: manifest_json
 
