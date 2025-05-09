@@ -1,6 +1,7 @@
 import tarfile
 import logging
 from output_models import SambaFinding
+from collections import Counter
 
 logger = logging.getLogger("samba_inspector")
 
@@ -12,6 +13,7 @@ def contains_error(line):
 def inspect_samba_logs(tar_path, max_lines=100):
     findings = []
     total_matched = 0
+    keyword_counter = Counter()
 
     with tarfile.open(tar_path, "r:*") as tar:
         members = [m for m in tar.getnames() if "samba" in m.lower() and "old" not in m.lower()]
@@ -27,6 +29,9 @@ def inspect_samba_logs(tar_path, max_lines=100):
                 lines = f.read().decode(errors="replace").splitlines()
                 for i, line in enumerate(lines):
                     if contains_error(line):
+                        matched_keywords = [term.upper() for term in ERROR_KEYWORDS if term in line.lower()]
+                        keyword_counter.update(matched_keywords)
+
                         findings.append(SambaFinding(
                             source=member,
                             line_number=i + 1,
@@ -46,4 +51,7 @@ def inspect_samba_logs(tar_path, max_lines=100):
                     component="samba"
                 ))
 
-    return findings
+    return {
+        "entries": findings,
+        "summary": dict(keyword_counter)
+    }

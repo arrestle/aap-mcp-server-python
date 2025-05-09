@@ -50,7 +50,6 @@ priority_files:
     label: "Samba Logs"
     parser: samba_errors
 
-  - path: sos_reports/sos.json
-    key: manifest_files
-    parser: manifest_json
-
+  # - path: sos_reports/sos.json
+  #   key: manifest_files
+  #   parser: manifest_json
