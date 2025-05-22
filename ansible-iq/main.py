@@ -8,13 +8,14 @@ from typing import Optional
 app = FastAPI()
 
 OLLAMA_ENDPOINT = "http://localhost:11434/api/generate"
-from tools import samba_tool, job_lifecycle_tool, dispatcher_tool, firewall_tool
+from tools import samba_tool, job_lifecycle_tool, dispatcher_tool, firewall_tool, receptor_tool
 
 TOOL_REGISTRY = {
     "analyze_samba": samba_tool.run_tool,
     "analyze_jobs": job_lifecycle_tool.run_tool,
     "analyze_dispatcher": dispatcher_tool.run_tool,
-    "analyze_firewall": firewall_tool.run_tool
+    "analyze_firewall": firewall_tool.run_tool,
+    "analyze_receptor": receptor_tool.run_tool,
 }
 
 
