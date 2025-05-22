@@ -26,8 +26,17 @@ class MCPRequest(BaseModel):
 
 # --- Routing Logic ---
 def route_prompt(prompt: str):
-    if "samba" in prompt.lower():
+    lower_prompt = prompt.lower()
+    if "samba" in lower_prompt:
         return "analyze_samba"
+    elif any(word in lower_prompt for word in ["job", "lifecycle", "task", "awx"]):
+        return "analyze_jobs"
+    elif any(word in lower_prompt for word in ["dispatcher", "periodic", "scheduler"]):
+        return "analyze_dispatcher"
+    elif any(word in lower_prompt for word in ["firewall", "nt_status_authentication_firewall_failed"]):
+        return "analyze_firewall"
+    elif any(word in lower_prompt for word in ["receptor", "mesh", "node id", "control socket"]):
+        return "analyze_receptor"
     return None
 
 
