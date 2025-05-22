@@ -8,6 +8,10 @@ ollama pull phi4:14b
 ollama pull qwen3:0.6b
 ollama serve # servers all available models
 ```
+
+## ansible-iq (Future Public Repo)
+See readme inside this directory. Note assumes that ollama is running as a service and has qwen3:0.6b installed
+
 ### Example-1 is a single file python program with a config.yaml specifying important files.
 This example only implements a fastapi RESTful interface
 ```
@@ -21,7 +25,7 @@ cd example-2
 PYTHONPATH=. python main.py --http
 ```
 
-### Example-3 mcp server from scratch
+### Example-3 mcp server from scratch - runs with mcp_parser 
 
 make sure ollama is running qwen3:0.6b
 ```
@@ -50,6 +54,8 @@ uvicorn main:app --host 127.0.0.1 --port 8000 --reload
 # in another terminal
 cd mcp_parser
 
+# send a quesion to qwen3 llm model
+curl -X POST http://127.0.0.1:8000/mcp/qwen3   -H "Content-Type: application/json"   -d '{"prompt": "Analyze this samba config", "tool": null}'
 
 ```
 
@@ -63,6 +69,7 @@ python main.py ../tar/sosreport-VA807527-04112973-2025-04-11-frwjgxp.tar.xz > so
 uvicorn mcp_server:app --reload
 
  python sos_chat_tui.py ../tar/sosreport-VA807527-04112973-2025-04-11-frwjgxp.tar.xz 
-
+```
 # References
-* [Claude and MCP](https://github.com/agardnerIT/claude-mcp-server-observability)
+
+- [Claude and MCP](https://github.com/agardnerIT/claude-mcp-server-observability) – GitHub project exploring integration of Claude with an MCP server for observability workflows.

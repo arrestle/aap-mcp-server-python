@@ -54,7 +54,7 @@ Ask a question below.
         prompt = f"Context:\n{self.context}\n\nQuestion: {question}"
         try:
             result = subprocess.run(
-                ["ollama", "run", "gemma3", prompt],
+                ["ollama", "run", "qwen3:0.6b", prompt],
                 capture_output=True, text=True, check=True
             )
             return result.stdout.strip()
