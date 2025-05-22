@@ -1,3 +1,4 @@
+import logging
 from fastapi import FastAPI, Request
 from pydantic import BaseModel
 from mcp_parser import tool as mcp_tool
@@ -43,8 +44,12 @@ def route_prompt(prompt: str):
 # --- Main Handler ---
 @app.post("/mcp/qwen3")
 def handle_request(req: MCPRequest):
+    
+    log = logging.getLogger(__name__)
+    
     # Step 1: Determine tool
     tool = route_prompt(req.prompt)
+
 
     # Step 2: Ask LLM
     ollama_payload = {
@@ -52,6 +57,30 @@ def handle_request(req: MCPRequest):
         "prompt": req.prompt,
         "stream": False
     }
+    
+    # Step 3: If tool is found, run it and modify the prompt
+    if tool and tool in TOOL_REGISTRY:
+        tool_output = TOOL_REGISTRY[tool](req.prompt)
+        log.info(f"Tool {tool} output: {tool_output}")
+        wrapped_prompt = f"""
+        You are an Ansible support engineer at Red Hat.
+
+        You are analyzing a parsed Ansible SOS report from an AAP customer environment.
+
+        - If logs are mentioned, extract context from files like `receptor.log`, `dispatcher.log`, `job_lifecycle.log`, or Samba logs.
+        - Be concise but technical.
+        - Summarize failure causes, recommend diagnostic steps, and suggest next actions.
+        - If a known pattern or error message is found, explain it clearly.
+
+        Customer Question:
+        {req.prompt}
+        """
+        ollama_payload["prompt"] = wrapped_prompt
+        ollama_payload["tool"] = tool
+        ollama_payload["tool_output"] = tool_output
+        
+    print(f"Request to Ollama: {ollama_payload}")
+    
     response = requests.post(OLLAMA_ENDPOINT, json=ollama_payload)
     print(f"Response from Ollama: {response.text}")
     ollama_response = requests.post(OLLAMA_ENDPOINT, json=ollama_payload)
@@ -75,10 +104,5 @@ def handle_request(req: MCPRequest):
             "error": "Ollama response missing 'response' field",
             "ollama_raw": result_json,
         }
-
-    # Step 3: Optionally run tool
-    if tool and tool in TOOL_REGISTRY:
-        tool_result = TOOL_REGISTRY[tool](llm_output)
-        return {"llm_output": llm_output, "tool_output": tool_result}
     
     return {"llm_output": llm_output}
