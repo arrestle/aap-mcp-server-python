@@ -70,6 +70,14 @@ uvicorn mcp_server:app --reload
 
  python sos_chat_tui.py ../tar/sosreport-VA807527-04112973-2025-04-11-frwjgxp.tar.xz 
 ```
+
+
+### ansible-iq
+
+Meant to be a public repo - but ran into trouble with the llm being "too clever" and ignoring the input from the mcp server.
+
 # References
 
 - [Claude and MCP](https://github.com/agardnerIT/claude-mcp-server-observability) – GitHub project exploring integration of Claude with an MCP server for observability workflows.
+
+[REDHAT MCP](https://www.redhat.com/en/blog/building-enterprise-ready-ai-agents-streamlined-development-red-hat-openshift-ai)

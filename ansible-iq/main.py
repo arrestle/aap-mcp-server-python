@@ -26,19 +26,24 @@ class MCPRequest(BaseModel):
     tool: Optional[str] = None
 
 # --- Routing Logic ---
-def route_prompt(prompt: str):
+def route_prompt(prompt: str) -> list[str]:
     lower_prompt = prompt.lower()
+    tools = []
+
+    if any(word in lower_prompt for word in ["receptor", "mesh", "node id", "control socket"]):
+        tools.append("analyze_receptor")
     if "samba" in lower_prompt:
-        return "analyze_samba"
-    elif any(word in lower_prompt for word in ["job", "lifecycle", "task", "awx"]):
-        return "analyze_jobs"
-    elif any(word in lower_prompt for word in ["dispatcher", "periodic", "scheduler"]):
-        return "analyze_dispatcher"
-    elif any(word in lower_prompt for word in ["firewall", "nt_status_authentication_firewall_failed"]):
-        return "analyze_firewall"
-    elif any(word in lower_prompt for word in ["receptor", "mesh", "node id", "control socket"]):
-        return "analyze_receptor"
-    return None
+        tools.append("analyze_samba")
+    if any(word in lower_prompt for word in ["job", "lifecycle", "task", "awx"]):
+        tools.append("analyze_jobs")
+    if any(word in lower_prompt for word in ["dispatcher", "periodic", "scheduler"]):
+        tools.append("analyze_dispatcher")
+    if any(word in lower_prompt for word in ["firewall", "nt_status_authentication_firewall_failed"]):
+        tools.append("analyze_firewall")
+
+    return tools
+
+
 
 
 # --- Main Handler ---
@@ -68,7 +73,7 @@ def handle_request(req: MCPRequest):
         You are analyzing a parsed Ansible SOS report from an AAP customer environment.
 
         - If logs are mentioned, extract context from files like `receptor.log`, `dispatcher.log`, `job_lifecycle.log`, or Samba logs.
-        - Be concise but technical.
+        - Be concise but technical and take into account contents of the logs.
         - Summarize failure causes, recommend diagnostic steps, and suggest next actions.
         - If a known pattern or error message is found, explain it clearly.
 
