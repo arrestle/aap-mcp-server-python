@@ -54,7 +54,14 @@ chmod +x /usr/local/bin/ollama
 ollama pull qwen3:0.6b
 ollama serve
 
-## If running as a systemd
+## If running as a systemd Add [Service] add this before the ExecStart
+Type=simple
+Environment="OLLAMA_HOST=http://0.0.0.0:11434"
+ExecStart=/usr/local/bin/ollama serve
+# then 
+systemctl daemon-reload
+systemctl restart ollama
+
 systemctl status ollama
 ollama pull qwen3:0.6b
 sudo systemctl restart ollama

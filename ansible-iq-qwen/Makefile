@@ -1,8 +1,8 @@
 # Makefile for Ansible IQ - Ansible SOS Report Analyzer with Qwen AI
 
 NAME = ansible-iq
-CONTAINER = $(NAME)
 IMAGE = localhost/$(NAME)
+CONTAINER = $(NAME)
 PORT = 8000
 VENV = .venv
 SOS_DIR = /var/mcp
@@ -20,6 +20,9 @@ setup:
 
 build:
 	@echo "🟡 Building Podman container..."
+	podman stop $(CONTAINER) || true
+	podman rm $(CONTAINER) || true
+	podman rmi $(IMAGE) || true
 	podman build -t $(IMAGE) -f Dockerfile.podman
 
 run-server:
@@ -27,11 +30,11 @@ run-server:
 	@echo "🟢 Copying SOS report into container..."
 	podman stop $(CONTAINER) || true
 	podman rm $(CONTAINER) || true
-	podman rmi $(CONTAINER) || true
 	podman run -d --name $(CONTAINER) -p $(PORT):$(PORT) $(IMAGE)
 	podman exec -it $(CONTAINER) mkdir -p /var/mcp
 	podman cp $(SOS_FILE) $(CONTAINER):/var/mcp/sosreport
-	@echo "🟢 MCP Server is now running at http://localhost:$(PORT)"
+	@echo "🟢 MCP Server is now running at curl http://127.0.0.1:$(PORT)"
+	curl http://127.0.0.1:$(PORT)/health
 
 run-tui:
 	@echo "🟢 Launching TUI..."

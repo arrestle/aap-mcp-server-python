@@ -17,7 +17,8 @@ def health_check():
     return {"status": "ok", "service": "MCP Server", "uptime": "N/A"}
 
 # === Configuration ===
-OLLAMA_ENDPOINT = "http://localhost:11434/api/generate"
+#OLLAMA_ENDPOINT = "http://127.0.0.1:11434/api/generate" # outside of container
+OLLAMA_ENDPOINT = "http://host.containers.internal:11434/api/generate"
 
 # === Models ===
 class MCPRequest(BaseModel):
