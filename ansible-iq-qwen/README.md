@@ -29,6 +29,9 @@ This solution is optimized for air-gapped, low-resource environments like field 
 - W: Remote file syncing
 - W: Cloud-based inference
 
+### DEMO
+
+![Ansible IQ Demo](assets/demo.gif)
 
 ```bash
 cd ansible-iq-qwen
