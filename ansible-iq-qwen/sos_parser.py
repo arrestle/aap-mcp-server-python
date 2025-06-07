@@ -5,6 +5,21 @@ from pydantic import BaseModel
 from typing import Optional
 from tools import samba_tool, job_lifecycle_tool, dispatcher_tool, firewall_tool, receptor_tool
 import requests
+import re
+import sys
+
+
+# Set up root logger
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[
+        logging.StreamHandler(sys.stdout)  # Ensures logs go to stdout
+    ]
+)
+
+log = logging.getLogger(__name__)
+
 
 app = FastAPI()
 
@@ -42,11 +57,23 @@ TOOL_REGISTRY = {
 
 # === Tool Routing Logic ===
 def route_prompt(prompt: str) -> str:
-    prompt = prompt.lower()
-    if "samba" in prompt:
+    prompt = prompt.lower().strip()
+
+    if re.search(r"\b(samba|cifs|smb|network)\b", prompt):
         return "analyze_samba"
-    elif "job" in prompt or "task" in prompt:
+    
+    elif re.search(r"\b(job|task|playbook|ansible|awx)\b", prompt):
         return "analyze_jobs"
+
+    elif re.search(r"\b(dispatcher|scheduler|schedule|periodic)\b", prompt):
+        return "analyze_dispatcher"
+
+    elif re.search(r"\b(firewall|iptables|policy|nt_status_authentication_firewall_failed)\b", prompt):
+        return "analyze_firewall"
+
+    elif re.search(r"\b(receptor|mesh|socket|node id|node identity)\b", prompt):
+        return "analyze_receptor"
+
     else:
         return ""
 
@@ -96,6 +123,8 @@ async def handle_request(req: MCPRequest):
     
     # Step 1: Determine tool
     tool = route_prompt(req.prompt)
+    
+    log.info(f"Routing prompt to tool: {tool} for prompt: {req.prompt}")
 
     # Step 2: Run tool if found
     tool_output = ""

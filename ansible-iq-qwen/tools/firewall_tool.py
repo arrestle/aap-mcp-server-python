@@ -1,9 +1,10 @@
 # tools/firewall_tool.py
 
+import os
 from mcp_parser import correlate_firewall_failures
 import json
 
-DEFAULT_SOS_JSON = "/var/mcp/parsed_sosreport.json"
+DEFAULT_SOS_PATH = "/var/mcp/sosreport"
 
 def run_tool(llm_output: str) -> str:
     if not os.path.exists(DEFAULT_SOS_JSON):
