@@ -12,6 +12,12 @@ RECEPTOR_LOG_PATTERNS = [
 ]
 
 def run_tool(llm_output: str) -> str:
+    findings = run_tool_structured()
+
+    return f"🔍 Receptor log findings:\n" + "\n".join(findings[:20])
+
+
+def run_tool_structured() -> str:
     if not os.path.exists(DEFAULT_SOS_PATH):
         return f"❌ SOS report not found at {DEFAULT_SOS_PATH}"
 
@@ -33,4 +39,4 @@ def run_tool(llm_output: str) -> str:
     if not findings:
         return "✅ No issues found in receptor.log."
 
-    return f"🔍 Receptor log findings:\n" + "\n".join(findings[:20])
+    return findings 

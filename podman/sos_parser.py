@@ -1,12 +1,20 @@
 import logging
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from typing import Optional
-from tools import samba_tool, job_lifecycle_tool, dispatcher_tool, firewall_tool, receptor_tool
+
+import uvicorn
+from tools import samba_tool, job_lifecycle_tool, dispatcher_tool, receptor_tool
+from structured_agent import StructuredAgent, AnalysisResult
 import requests
 import re
 import sys
+
+
+class MCPRequest(BaseModel):
+    prompt: str  # Required user input/question
+    tool: Optional[str] = None  # Optional tool specification
 
 
 # Set up root logger
@@ -22,6 +30,19 @@ log = logging.getLogger(__name__)
 
 
 app = FastAPI()
+router = APIRouter()
+agent = StructuredAgent("models/qwen3-1.7b-q4_0.gguf")
+
+@router.post("/analyze-sos", response_model=AnalysisResult)
+async def analyze_sos_endpoint(payload: dict):
+    """Endpoint for SOS report analysis"""
+    try:
+        return agent.analyze_sos(payload.get("sos_text", ""))
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Analysis failed: {str(e)}"
+        )
 
 @app.get("/")
 def read_root():
@@ -30,6 +51,31 @@ def read_root():
 @app.get("/health")
 def health_check():
     return {"status": "ok", "service": "MCP Server", "uptime": "N/A"}
+
+@app.post("/mcp/all-tools")
+async def get_all_tools_output(req: MCPRequest):
+    """Endpoint to execute all registered tools and return aggregated outputs"""
+    all_outputs = []
+    
+    for tool_name, tool_func in STRUCTURED_REGISTRY.items():
+        try:
+            tool_output = tool_func()
+            all_outputs.append({
+                "tool": tool_name,
+                "output": tool_output,
+                "status": "success"
+            })
+            log.info(f"Successfully executed {tool_name}")
+        except Exception as e:
+            all_outputs.append({
+                "tool": tool_name,
+                "error": str(e),
+                "status": "failed"
+            })
+            log.error(f"Tool {tool_name} failed: {str(e)}")
+
+    return {"tools": all_outputs}
+    
 
 # === Configuration ===
 #OLLAMA_ENDPOINT = "http://127.0.0.1:11434/api/generate" # outside of container
@@ -51,15 +97,22 @@ TOOL_REGISTRY = {
     "analyze_samba": samba_tool.run_tool,
     "analyze_jobs": job_lifecycle_tool.run_tool,
     "analyze_dispatcher": dispatcher_tool.run_tool,
-    "analyze_firewall": firewall_tool.run_tool,
     "analyze_receptor": receptor_tool.run_tool,
 }
+
+STRUCTURED_REGISTRY = {
+    "analyze_samba": samba_tool.run_tool_structured,
+    "analyze_jobs": job_lifecycle_tool.run_tool_structured,
+    "analyze_dispatcher": dispatcher_tool.run_tool_structured,
+    "analyze_receptor": receptor_tool.run_tool_structured,
+}   
+
 
 # === Tool Routing Logic ===
 def route_prompt(prompt: str) -> str:
     prompt = prompt.lower().strip()
 
-    if re.search(r"\b(samba|cifs|smb|network)\b", prompt):
+    if re.search(r"\b(samba|cifs|smb|network|firewall|iptables|policy|nt_status)\b", prompt):
         return "analyze_samba"
     
     elif re.search(r"\b(job|task|playbook|ansible|awx)\b", prompt):
@@ -67,9 +120,6 @@ def route_prompt(prompt: str) -> str:
 
     elif re.search(r"\b(dispatcher|scheduler|schedule|periodic)\b", prompt):
         return "analyze_dispatcher"
-
-    elif re.search(r"\b(firewall|iptables|policy|nt_status_authentication_firewall_failed)\b", prompt):
-        return "analyze_firewall"
 
     elif re.search(r"\b(receptor|mesh|socket|node id|node identity)\b", prompt):
         return "analyze_receptor"
@@ -139,4 +189,14 @@ async def handle_request(req: MCPRequest):
     return StreamingResponse(
         generate_ollama_response(final_prompt),
         media_type="text/event-stream"
+    )
+    
+    
+if __name__ == "__main__":
+    uvicorn.run(
+        "sos_report:app",
+        host="0.0.0.0", 
+        port=8000,
+        reload=True,
+        reload_includes=["*.py", "*.json"]  # Explicit reload targets
     )

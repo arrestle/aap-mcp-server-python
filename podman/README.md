@@ -51,8 +51,11 @@ CMAKE_ARGS="-DLLAMA_AVX2=on" pip install --force-reinstall --no-cache-dir llama-
 # Install llama.cpp from https://github.com/ggml-org/llama.cpp/releases and move the files into the .bin folder
 # This did not work for me. I got stack dumps.
 
-cmake -B build -DCMAKE_BUILD_TYPE=Debug -DLLAMA_CURL=OFF
-cmake --build build --config Release -j$(nproc)
+git clone https://github.com/ggerganov/llama.cpp && cd llama.cpp
+
+cmake -B build -DCMAKE_BUILD_TYPE=Debug -DLLAMA_CURL=OFF # set up the makefile.
+cmake --build build --config Release -j$(nproc) # actually perform the make
+mv build/* ../bin
 
 export LD_LIBRARY_PATH=$PWD/bin:$LD_LIBRARY_PATH
 
@@ -73,7 +76,24 @@ sudo systemctl disable SplunkForwarder.service
 sudo systemctl stop ollama.service
 sudo systemctl disable ollama.service
 
-```
 
+# start up the mcp server sos_parser
+uvicorn sos_parser:app --reload
 
+# check the endpoints
+curl http://127.0.0.1:8000/health
 
+curl -X POST "http://127.0.0.1:8000/mcp/all-tools" \
+  -H "Content-Type: application/json" \
+  -d '{"prompt": ""}'
+# -or-
+ curl -X POST "http://127.0.0.1:8000/mcp/all-tools"   -H "Content-Type: application/json"   -d '{"prompt": ""}' > podman.json 
+
+ #
+ ```
+
+ ## TODO
+ 1. sos report is currently stringified - needs to be more structured.
+ 2. connect agent to  mcp server (sos_parser.py)
+ 3. connect tui to agent
+ 4. 

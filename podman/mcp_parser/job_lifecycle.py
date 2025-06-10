@@ -1,8 +1,9 @@
 import tarfile
 import json
+from mcp_parser.output_models  import JobLifecycleEntry
 
-def parse_job_lifecycle_logs(tar_path: str, max_lines: int = 10):
-    results = []
+def parse_job_lifecycle_logs(tar_path: str, max_lines: int = 10): 
+    results = [] 
     try:
         with tarfile.open(tar_path, "r:*") as tar:
             members = [
@@ -18,7 +19,9 @@ def parse_job_lifecycle_logs(tar_path: str, max_lines: int = 10):
                     parsed_lines = []
                     for line in lines:
                         try:
-                            parsed_lines.append(json.loads(line))
+                            parsed_line = json.loads(line)
+                            job_lifecycle_entry = JobLifecycleEntry(**parsed_line)    
+                            parsed_lines.append(job_lifecycle_entry)                   
                         except json.JSONDecodeError:
                             parsed_lines.append({"raw": line, "error": "invalid JSON"})
                     results.append({
