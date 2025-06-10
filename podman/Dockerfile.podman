@@ -1,0 +1,18 @@
+# Dockerfile.podman
+FROM registry.redhat.io/ubi9/python-311
+
+# Install system dependencies
+RUN dnf install -y gcc-c++ make && dnf clean all
+
+# Copy application
+WORKDIR /app
+COPY . .
+
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Download model during build (airgap prep)
+RUN huggingface-cli download Antigma/Qwen3-1.7B-GGUF qwen3-1.7b-q4_k_m.gguf --local-dir ./models
+
+# Multi-service setup
+CMD ["podman-compose", "up"]

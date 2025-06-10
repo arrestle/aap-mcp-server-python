@@ -1,0 +1,43 @@
+# sos-analyzer-pod.yaml
+version: "3.8"
+pod:
+  metadata:
+    name: sos-analyzer
+  spec:
+    sharesCgroup: true
+    sharesIpc: true
+
+services:
+  llama-server:
+    image: localhost/llama-cpp-server:qwen3-1.7b
+    command: ["--model", "/models/qwen3-1.7b.gguf", "--ctx-size", "32768", "-t", "4"]
+    volumes:
+      - sos-reports:/var/mcp:ro
+    security_opt:
+      - label=disable
+    environment:
+      - GGML_NUM_THREADS=4
+    resources:
+      limits:
+        memory: 6G
+        cpu: 2.5
+
+  mcp-server:
+    image: localhost/ansible-iq:latest
+    depends_on:
+      - llama-server
+    volumes:
+      - sos-reports:/var/mcp:ro
+    environment:
+      - LLAMA_ENDPOINT=http://llama-server:8080
+    ports:
+      - "8000:8000"
+    security_opt:
+      - label=disable
+    resources:
+      limits:
+        memory: 2G
+        cpu: 1
+
+volumes:
+  sos-reports:

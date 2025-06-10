@@ -1,0 +1,24 @@
+# podman-compose.yaml
+services:
+  llama-server:
+    image: localhost/llama-cpp-server
+    command: --model /models/qwen3-1.7b-q4_k_m.gguf --port 8080
+    volumes:
+      - ./models:/models:ro
+
+  mcp-server:
+    build: .
+    ports:
+      - "8000:8000"
+    depends_on:
+      - llama-server
+    environment:
+      - LLAMA_ENDPOINT=http://llama-server:8080
+
+  tui:
+    build: .
+    command: python sos_chat_tui.py
+    depends_on:
+      - mcp-server
+    stdin_open: true
+    tty: true
