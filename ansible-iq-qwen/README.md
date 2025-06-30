@@ -27,7 +27,7 @@ This solution is optimized for air-gapped, low-resource environments like field 
 *Won't Have (for MVP)*
 - W: GUI version
 - W: Remote file syncing
-- W: Cloud-based inference
+- W: Connection to running kubernetes cluster and systemd logs.
 
 ### DEMO
 
@@ -69,15 +69,12 @@ systemctl status ollama
 ollama pull qwen3:0.6b
 sudo systemctl restart ollama
 
-podman build -t ansible-iq -f Dockerfile
-
-
 ## To rebuild.
 podman container list
 podman stop ansible-iq
 podman rm ansible-iq
 podman rmi ansible-iq
-podman build -t ansible-iq -f Dockerfile
+podman build -t ansible-iq -f Dockerfile.podman
 
 
 ## run podman
@@ -91,6 +88,10 @@ podman run -d \
 # copy in your sos report
 podman exec -it ansible-iq mkdir -p /var/mcp
 .venvarestlel:ansible-iq-qwen$ podman cp /var/mcp/sosreport ansible-iq:/var/mcp/sosreport
+
+# run the tui
+source .venv/bin/activate
+python sos_chat_tui.py 
 ```
 
 
